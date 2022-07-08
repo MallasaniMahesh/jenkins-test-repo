@@ -1,1 +1,10 @@
-echo'Hello world main'
+pipeline {
+     agent any
+     stages {
+         stage('Deploying Serverless') {
+             steps {
+                 echo'Hello world main'
+             }
+         }  
+     }
+}
