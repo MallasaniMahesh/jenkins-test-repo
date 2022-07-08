@@ -1,9 +1,9 @@
 pipeline {
      agent any
      stages {
-         stage('Deploying Serverless') {
+         stage('main') {
              steps {
-                 echo'Hello world main'
+                 echo'Hello world main2'
              }
          }  
      }
