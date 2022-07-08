@@ -3,7 +3,7 @@ pipeline {
      stages {
          stage('Deploying Serverless') {
              steps {
-                 echo'Hello world main'
+                 echo'Hello world dev'
              }
          }  
      }
