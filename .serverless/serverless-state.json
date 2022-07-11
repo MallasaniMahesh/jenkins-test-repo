@@ -1,14 +1,28 @@
 {
   "service": {
-    "service": "aws-python-project",
+    "service": "POC2",
     "serviceObject": {
-      "name": "aws-python-project"
+      "name": "POC2"
     },
     "provider": {
       "name": "aws",
       "runtime": "python3.8",
+      "region": "us-west-2",
+      "iamRoleStatements": [
+        {
+          "Effect": "Allow",
+          "Action": [
+            "dynamodb:Query",
+            "dynamodb:Scan",
+            "dynamodb:GetItem",
+            "dynamodb:PutItem",
+            "dynamodb:UpdateItem",
+            "dynamodb:DeleteItem"
+          ],
+          "Resource": "arn:aws:dynamodb:us-west-2:016250140917:table/poc2_customer_table-qa"
+        }
+      ],
       "stage": "dev",
-      "region": "us-east-1",
       "versionFunctions": true,
       "compiledCloudFormationTemplate": {
         "AWSTemplateFormatVersion": "2010-09-09",
@@ -83,10 +97,10 @@
               }
             }
           },
-          "HelloLogGroup": {
+          "CrudDynamoDBLogGroup": {
             "Type": "AWS::Logs::LogGroup",
             "Properties": {
-              "LogGroupName": "/aws/lambda/aws-python-project-dev-hello"
+              "LogGroupName": "/aws/lambda/qa-pipeline-function"
             }
           },
           "IamRoleLambdaExecution": {
@@ -114,8 +128,8 @@
                     "Fn::Join": [
                       "-",
                       [
-                        "aws-python-project",
-                        "dev",
+                        "POC2",
+                        "qa",
                         "lambda"
                       ]
                     ]
@@ -131,7 +145,7 @@
                         ],
                         "Resource": [
                           {
-                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/aws-python-project-dev*:*"
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/qa-pipeline-function:*"
                           }
                         ]
                       },
@@ -142,9 +156,12 @@
                         ],
                         "Resource": [
                           {
-                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/aws-python-project-dev*:*:*"
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/qa-pipeline-function:*:*"
                           }
                         ]
+                      },
+                      {
+                        "$ref": "$[\"service\"][\"provider\"][\"iamRoleStatements\"][0]"
                       }
                     ]
                   }
@@ -155,8 +172,8 @@
                 "Fn::Join": [
                   "-",
                   [
-                    "aws-python-project",
-                    "dev",
+                    "POC2",
+                    "qa",
                     {
                       "Ref": "AWS::Region"
                     },
@@ -166,18 +183,18 @@
               }
             }
           },
-          "HelloLambdaFunction": {
+          "CrudDynamoDBLambdaFunction": {
             "Type": "AWS::Lambda::Function",
             "Properties": {
               "Code": {
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/aws-python-project/dev/1657306290486-2022-07-08T18:51:30.486Z/aws-python-project.zip"
+                "S3Key": "serverless/POC2/qa/1657546551520-2022-07-11T13:35:51.520Z/POC2.zip"
               },
-              "Handler": "handler.hello",
+              "Handler": "poc2_serverless.crud_operations",
               "Runtime": "python3.8",
-              "FunctionName": "aws-python-project-dev-hello",
+              "FunctionName": "qa-pipeline-function",
               "MemorySize": 1024,
               "Timeout": 6,
               "Role": {
@@ -188,17 +205,299 @@
               }
             },
             "DependsOn": [
-              "HelloLogGroup"
+              "CrudDynamoDBLogGroup"
             ]
           },
-          "HelloLambdaVersionxttXc7Q9J0i51hBqzuhT4sPlNRKb4wR9cGUj5uIjgs": {
+          "CrudDynamoDBLambdaVersionbJKhxWKyKpI2puWrlzD09yBCfypXJFmtlAJXA8UOZY": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
-                "Ref": "HelloLambdaFunction"
+                "Ref": "CrudDynamoDBLambdaFunction"
               },
-              "CodeSha256": "TEEqPzq1zxEO9IT58qInsGZIzp8pp4kRk5IhM4ue134="
+              "CodeSha256": "4hP9NREHG5zxSzykqQmfKq4MjyJmpSNLqYXDt32yTu0="
+            }
+          },
+          "ApiGatewayRestApi": {
+            "Type": "AWS::ApiGateway::RestApi",
+            "Properties": {
+              "Name": "qa-POC2",
+              "EndpointConfiguration": {
+                "Types": [
+                  "EDGE"
+                ]
+              },
+              "Policy": ""
+            }
+          },
+          "ApiGatewayMethodGet": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "HttpMethod": "GET",
+              "RequestParameters": {},
+              "ResourceId": {
+                "Fn::GetAtt": [
+                  "ApiGatewayRestApi",
+                  "RootResourceId"
+                ]
+              },
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "ApiKeyRequired": false,
+              "AuthorizationType": "NONE",
+              "Integration": {
+                "IntegrationHttpMethod": "POST",
+                "Type": "AWS_PROXY",
+                "Uri": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":apigateway:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":lambda:path/2015-03-31/functions/",
+                      {
+                        "Fn::GetAtt": [
+                          "CrudDynamoDBLambdaFunction",
+                          "Arn"
+                        ]
+                      },
+                      "/invocations"
+                    ]
+                  ]
+                }
+              },
+              "MethodResponses": []
+            },
+            "DependsOn": [
+              "CrudDynamoDBLambdaPermissionApiGateway"
+            ]
+          },
+          "ApiGatewayMethodPut": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "HttpMethod": "PUT",
+              "RequestParameters": {},
+              "ResourceId": {
+                "Fn::GetAtt": [
+                  "ApiGatewayRestApi",
+                  "RootResourceId"
+                ]
+              },
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "ApiKeyRequired": false,
+              "AuthorizationType": "NONE",
+              "Integration": {
+                "IntegrationHttpMethod": "POST",
+                "Type": "AWS_PROXY",
+                "Uri": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":apigateway:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":lambda:path/2015-03-31/functions/",
+                      {
+                        "Fn::GetAtt": [
+                          "CrudDynamoDBLambdaFunction",
+                          "Arn"
+                        ]
+                      },
+                      "/invocations"
+                    ]
+                  ]
+                }
+              },
+              "MethodResponses": []
+            },
+            "DependsOn": [
+              "CrudDynamoDBLambdaPermissionApiGateway"
+            ]
+          },
+          "ApiGatewayMethodDelete": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "HttpMethod": "DELETE",
+              "RequestParameters": {},
+              "ResourceId": {
+                "Fn::GetAtt": [
+                  "ApiGatewayRestApi",
+                  "RootResourceId"
+                ]
+              },
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "ApiKeyRequired": false,
+              "AuthorizationType": "NONE",
+              "Integration": {
+                "IntegrationHttpMethod": "POST",
+                "Type": "AWS_PROXY",
+                "Uri": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":apigateway:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":lambda:path/2015-03-31/functions/",
+                      {
+                        "Fn::GetAtt": [
+                          "CrudDynamoDBLambdaFunction",
+                          "Arn"
+                        ]
+                      },
+                      "/invocations"
+                    ]
+                  ]
+                }
+              },
+              "MethodResponses": []
+            },
+            "DependsOn": [
+              "CrudDynamoDBLambdaPermissionApiGateway"
+            ]
+          },
+          "ApiGatewayMethodPost": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "HttpMethod": "POST",
+              "RequestParameters": {},
+              "ResourceId": {
+                "Fn::GetAtt": [
+                  "ApiGatewayRestApi",
+                  "RootResourceId"
+                ]
+              },
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "ApiKeyRequired": false,
+              "AuthorizationType": "NONE",
+              "Integration": {
+                "IntegrationHttpMethod": "POST",
+                "Type": "AWS_PROXY",
+                "Uri": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":apigateway:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":lambda:path/2015-03-31/functions/",
+                      {
+                        "Fn::GetAtt": [
+                          "CrudDynamoDBLambdaFunction",
+                          "Arn"
+                        ]
+                      },
+                      "/invocations"
+                    ]
+                  ]
+                }
+              },
+              "MethodResponses": []
+            },
+            "DependsOn": [
+              "CrudDynamoDBLambdaPermissionApiGateway"
+            ]
+          },
+          "ApiGatewayDeployment1657546550551": {
+            "Type": "AWS::ApiGateway::Deployment",
+            "Properties": {
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "StageName": "dev"
+            },
+            "DependsOn": [
+              "ApiGatewayMethodGet",
+              "ApiGatewayMethodPut",
+              "ApiGatewayMethodDelete",
+              "ApiGatewayMethodPost"
+            ]
+          },
+          "CrudDynamoDBLambdaPermissionApiGateway": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "CrudDynamoDBLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "ApiGatewayRestApi"
+                    },
+                    "/*/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "usersTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+              "TableName": "poc2_customer_table_qa",
+              "AttributeDefinitions": [
+                {
+                  "AttributeName": "Customer_id",
+                  "AttributeType": "S"
+                }
+              ],
+              "KeySchema": [
+                {
+                  "AttributeName": "Customer_id",
+                  "KeyType": "HASH"
+                }
+              ],
+              "ProvisionedThroughput": {
+                "ReadCapacityUnits": 1,
+                "WriteCapacityUnits": 1
+              }
             }
           }
         },
@@ -208,16 +507,42 @@
               "Ref": "ServerlessDeploymentBucket"
             },
             "Export": {
-              "Name": "sls-aws-python-project-dev-ServerlessDeploymentBucketName"
+              "Name": "sls-POC2-qa-ServerlessDeploymentBucketName"
             }
           },
-          "HelloLambdaFunctionQualifiedArn": {
+          "CrudDynamoDBLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "HelloLambdaVersionxttXc7Q9J0i51hBqzuhT4sPlNRKb4wR9cGUj5uIjgs"
+              "Ref": "CrudDynamoDBLambdaVersionbJKhxWKyKpI2puWrlzD09yBCfypXJFmtlAJXA8UOZY"
             },
             "Export": {
-              "Name": "sls-aws-python-project-dev-HelloLambdaFunctionQualifiedArn"
+              "Name": "sls-POC2-qa-CrudDynamoDBLambdaFunctionQualifiedArn"
+            }
+          },
+          "ServiceEndpoint": {
+            "Description": "URL of the service endpoint",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  "https://",
+                  {
+                    "Ref": "ApiGatewayRestApi"
+                  },
+                  ".execute-api.",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ".",
+                  {
+                    "Ref": "AWS::URLSuffix"
+                  },
+                  "/qa"
+                ]
+              ]
+            },
+            "Export": {
+              "Name": "sls-POC2-qa-ServiceEndpoint"
             }
           }
         }
@@ -308,25 +633,84 @@
     },
     "pluginsData": {},
     "functions": {
-      "hello": {
-        "handler": "handler.hello",
-        "events": [],
-        "name": "aws-python-project-dev-hello",
+      "crudDynamoDB": {
+        "handler": "poc2_serverless.crud_operations",
+        "name": "qa-pipeline-function",
+        "events": [
+          {
+            "http": {
+              "path": "",
+              "method": "get",
+              "integration": "AWS_PROXY"
+            }
+          },
+          {
+            "http": {
+              "path": "",
+              "method": "put",
+              "integration": "AWS_PROXY"
+            }
+          },
+          {
+            "http": {
+              "path": "",
+              "method": "delete",
+              "integration": "AWS_PROXY"
+            }
+          },
+          {
+            "http": {
+              "path": "",
+              "method": "post",
+              "integration": "AWS_PROXY"
+            }
+          }
+        ],
         "package": {},
         "memory": 1024,
         "timeout": 6,
         "runtime": "python3.8",
         "vpc": {},
-        "versionLogicalId": "HelloLambdaVersionxttXc7Q9J0i51hBqzuhT4sPlNRKb4wR9cGUj5uIjgs"
+        "versionLogicalId": "CrudDynamoDBLambdaVersionbJKhxWKyKpI2puWrlzD09yBCfypXJFmtlAJXA8UOZY"
       }
+    },
+    "resources": {
+      "Resources": {
+        "usersTable": {
+          "Type": "AWS::DynamoDB::Table",
+          "Properties": {
+            "TableName": "poc2_customer_table_qa",
+            "AttributeDefinitions": [
+              {
+                "AttributeName": "Customer_id",
+                "AttributeType": "S"
+              }
+            ],
+            "KeySchema": [
+              {
+                "AttributeName": "Customer_id",
+                "KeyType": "HASH"
+              }
+            ],
+            "ProvisionedThroughput": {
+              "ReadCapacityUnits": 1,
+              "WriteCapacityUnits": 1
+            }
+          }
+        }
+      },
+      "Outputs": {}
     },
     "configValidationMode": "warn",
     "serviceFilename": "serverless.yml",
     "initialServerlessConfig": {
-      "service": "aws-python-project",
+      "service": "POC2",
       "frameworkVersion": "3",
       "provider": {
         "$ref": "$[\"service\"][\"provider\"]"
+      },
+      "resources": {
+        "$ref": "$[\"service\"][\"resources\"]"
       },
       "functions": {
         "$ref": "$[\"service\"][\"functions\"]"
@@ -334,10 +718,10 @@
     },
     "layers": {},
     "isDashboardMonitoringPreconfigured": false,
-    "artifact": "C:\\Users\\Mahesh\\Desktop\\jenkins-multibranch-test-repo\\jenkins-test-repo\\aws-python-project\\.serverless\\aws-python-project.zip"
+    "artifact": "C:\\Users\\Mahesh\\Desktop\\jenkins-multibranch-test-repo\\jenkins-test-repo\\.serverless\\POC2.zip"
   },
   "package": {
-    "artifactDirectoryName": "serverless/aws-python-project/dev/1657306290486-2022-07-08T18:51:30.486Z",
-    "artifact": "aws-python-project.zip"
+    "artifactDirectoryName": "serverless/POC2/qa/1657546551520-2022-07-11T13:35:51.520Z",
+    "artifact": "POC2.zip"
   }
 }
