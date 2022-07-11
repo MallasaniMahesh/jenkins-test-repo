@@ -415,7 +415,7 @@
         "RestApiId": {
           "Ref": "ApiGatewayRestApi"
         },
-        "StageName": "qa"
+        "StageName": "dev"
       },
       "DependsOn": [
         "ApiGatewayMethodGet",
