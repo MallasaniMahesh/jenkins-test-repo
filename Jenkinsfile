@@ -3,7 +3,7 @@ pipeline {
      stages {
          stage('main') {
              steps {
-                 sh'serverless deploy --stage dev'
+                 sh'serverless deploy --stage prod'
              }
          }  
      }
