@@ -19,7 +19,7 @@
             "dynamodb:UpdateItem",
             "dynamodb:DeleteItem"
           ],
-          "Resource": "arn:aws:dynamodb:us-west-2:016250140917:table/poc2_customer_table-prod"
+          "Resource": "arn:aws:dynamodb:us-west-2:016250140917:table/poc2_customer_table-qa"
         }
       ],
       "stage": "dev",
@@ -100,7 +100,7 @@
           "CrudDynamoDBLogGroup": {
             "Type": "AWS::Logs::LogGroup",
             "Properties": {
-              "LogGroupName": "/aws/lambda/prod-pipeline-function"
+              "LogGroupName": "/aws/lambda/qa-pipeline-function"
             }
           },
           "IamRoleLambdaExecution": {
@@ -129,7 +129,7 @@
                       "-",
                       [
                         "POC2",
-                        "prod",
+                        "qa",
                         "lambda"
                       ]
                     ]
@@ -145,7 +145,7 @@
                         ],
                         "Resource": [
                           {
-                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/prod-pipeline-function:*"
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/qa-pipeline-function:*"
                           }
                         ]
                       },
@@ -156,7 +156,7 @@
                         ],
                         "Resource": [
                           {
-                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/prod-pipeline-function:*:*"
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/qa-pipeline-function:*:*"
                           }
                         ]
                       },
@@ -173,7 +173,7 @@
                   "-",
                   [
                     "POC2",
-                    "prod",
+                    "qa",
                     {
                       "Ref": "AWS::Region"
                     },
@@ -190,11 +190,11 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/POC2/prod/1657545410374-2022-07-11T13:16:50.374Z/POC2.zip"
+                "S3Key": "serverless/POC2/qa/1657546551520-2022-07-11T13:35:51.520Z/POC2.zip"
               },
               "Handler": "poc2_serverless.crud_operations",
               "Runtime": "python3.8",
-              "FunctionName": "prod-pipeline-function",
+              "FunctionName": "qa-pipeline-function",
               "MemorySize": 1024,
               "Timeout": 6,
               "Role": {
@@ -208,7 +208,7 @@
               "CrudDynamoDBLogGroup"
             ]
           },
-          "CrudDynamoDBLambdaVersion6w7SEuFamXFRnWzEae5uODCgKRFY0ngyawRyHC1Q7LM": {
+          "CrudDynamoDBLambdaVersionbJKhxWKyKpI2puWrlzD09yBCfypXJFmtlAJXA8UOZY": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
@@ -221,7 +221,7 @@
           "ApiGatewayRestApi": {
             "Type": "AWS::ApiGateway::RestApi",
             "Properties": {
-              "Name": "prod-POC2",
+              "Name": "qa-POC2",
               "EndpointConfiguration": {
                 "Types": [
                   "EDGE"
@@ -426,13 +426,13 @@
               "CrudDynamoDBLambdaPermissionApiGateway"
             ]
           },
-          "ApiGatewayDeployment1657545409400": {
+          "ApiGatewayDeployment1657546550551": {
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
               "RestApiId": {
                 "Ref": "ApiGatewayRestApi"
               },
-              "StageName": "prod"
+              "StageName": "dev"
             },
             "DependsOn": [
               "ApiGatewayMethodGet",
@@ -481,7 +481,7 @@
           "usersTable": {
             "Type": "AWS::DynamoDB::Table",
             "Properties": {
-              "TableName": "poc2_customer_table_prod",
+              "TableName": "poc2_customer_table_qa",
               "AttributeDefinitions": [
                 {
                   "AttributeName": "Customer_id",
@@ -507,16 +507,16 @@
               "Ref": "ServerlessDeploymentBucket"
             },
             "Export": {
-              "Name": "sls-POC2-prod-ServerlessDeploymentBucketName"
+              "Name": "sls-POC2-qa-ServerlessDeploymentBucketName"
             }
           },
           "CrudDynamoDBLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "CrudDynamoDBLambdaVersion6w7SEuFamXFRnWzEae5uODCgKRFY0ngyawRyHC1Q7LM"
+              "Ref": "CrudDynamoDBLambdaVersionbJKhxWKyKpI2puWrlzD09yBCfypXJFmtlAJXA8UOZY"
             },
             "Export": {
-              "Name": "sls-POC2-prod-CrudDynamoDBLambdaFunctionQualifiedArn"
+              "Name": "sls-POC2-qa-CrudDynamoDBLambdaFunctionQualifiedArn"
             }
           },
           "ServiceEndpoint": {
@@ -537,12 +537,12 @@
                   {
                     "Ref": "AWS::URLSuffix"
                   },
-                  "/prod"
+                  "/qa"
                 ]
               ]
             },
             "Export": {
-              "Name": "sls-POC2-prod-ServiceEndpoint"
+              "Name": "sls-POC2-qa-ServiceEndpoint"
             }
           }
         }
@@ -635,7 +635,7 @@
     "functions": {
       "crudDynamoDB": {
         "handler": "poc2_serverless.crud_operations",
-        "name": "prod-pipeline-function",
+        "name": "qa-pipeline-function",
         "events": [
           {
             "http": {
@@ -671,7 +671,7 @@
         "timeout": 6,
         "runtime": "python3.8",
         "vpc": {},
-        "versionLogicalId": "CrudDynamoDBLambdaVersion6w7SEuFamXFRnWzEae5uODCgKRFY0ngyawRyHC1Q7LM"
+        "versionLogicalId": "CrudDynamoDBLambdaVersionbJKhxWKyKpI2puWrlzD09yBCfypXJFmtlAJXA8UOZY"
       }
     },
     "resources": {
@@ -679,7 +679,7 @@
         "usersTable": {
           "Type": "AWS::DynamoDB::Table",
           "Properties": {
-            "TableName": "poc2_customer_table_prod",
+            "TableName": "poc2_customer_table_qa",
             "AttributeDefinitions": [
               {
                 "AttributeName": "Customer_id",
@@ -721,7 +721,7 @@
     "artifact": "C:\\Users\\Mahesh\\Desktop\\jenkins-multibranch-test-repo\\jenkins-test-repo\\.serverless\\POC2.zip"
   },
   "package": {
-    "artifactDirectoryName": "serverless/POC2/prod/1657545410374-2022-07-11T13:16:50.374Z",
+    "artifactDirectoryName": "serverless/POC2/qa/1657546551520-2022-07-11T13:35:51.520Z",
     "artifact": "POC2.zip"
   }
 }
