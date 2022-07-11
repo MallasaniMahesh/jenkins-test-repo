@@ -1,0 +1,63 @@
+service: POC2
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.8
+
+  region: us-west-2
+
+
+
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+       - dynamodb:Query
+       - dynamodb:Scan
+       - dynamodb:GetItem
+       - dynamodb:PutItem
+       - dynamodb:UpdateItem
+       - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:us-west-2:016250140917:table/poc2_customer_table-${sls:stage}"
+
+
+resources: # CloudFormation template syntax from here on.
+      Resources:
+        usersTable:
+          Type: AWS::DynamoDB::Table
+          Properties:
+            TableName: poc2_customer_table_${sls:stage}
+            AttributeDefinitions:
+              - AttributeName: Customer_id
+                AttributeType: S
+            KeySchema:
+              - AttributeName: Customer_id
+                KeyType: HASH
+              
+              
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+
+functions:
+  crudDynamoDB:
+    handler: poc2_serverless.crud_operations
+    name: ${sls:stage}-pipeline-function
+    events:
+      - http:
+          path: /
+          method: GET 
+      - http:
+          path: /
+          method: PUT 
+      - http:
+          path: /
+          method: DELETE
+      - http:
+          path: /
+          method: POST 
+
+
+
+
