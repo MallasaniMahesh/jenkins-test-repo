@@ -3,13 +3,8 @@ pipeline {
      stages {
          stage('main') {
              steps {
-                 sh'serverless deploy --stage prod'
+                 sh '${GIT_BRANCH}'
              }
          }  
-         stage('dev'){
-             steps{
-                 sh'serverless deploy --stage dev'
-             }
-         }
      }
 }
