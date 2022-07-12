@@ -3,7 +3,7 @@ pipeline {
      stages {
          stage('dev') {
              steps {
-                 echo'sls deploy'
+                 sh'serverless deploy --stage '+env.BRANCH_NAME
              }
          }  
      }
