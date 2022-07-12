@@ -3,7 +3,7 @@ pipeline {
      stages {
          stage('main') {
              steps {
-                 sh '${GIT_BRANCH}'
+                 echo '${GIT_BRANCH}'
              }
          }  
      }
