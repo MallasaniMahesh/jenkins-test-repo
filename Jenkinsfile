@@ -1,7 +1,7 @@
 pipeline {
      agent any
      stages {
-         stage('dev') {
+         stage(env.BRANCH_NAME) {
              steps {
                  sh'serverless deploy --stage '+env.BRANCH_NAME
              }

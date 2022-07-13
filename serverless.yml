@@ -2,11 +2,20 @@ service: POC2
 
 frameworkVersion: '3'
 
+
 provider:
   name: aws
   runtime: python3.8
 
+  stage: dev
   region: us-west-2
+
+
+custom:
+  myStage: ${opt:stage, self:provider.stage}
+  myRegion: ${opt:region, self:provider.region}
+
+
 
 
 
@@ -19,7 +28,7 @@ provider:
        - dynamodb:PutItem
        - dynamodb:UpdateItem
        - dynamodb:DeleteItem
-      Resource: "arn:aws:dynamodb:us-west-2:016250140917:table/poc2_customer_table-${sls:stage}"
+      Resource: "arn:aws:dynamodb:us-west-2:016250140917:table/poc2_customer_table-${self:custom.myStage}"
 
 
 resources: # CloudFormation template syntax from here on.
@@ -27,7 +36,7 @@ resources: # CloudFormation template syntax from here on.
         usersTable:
           Type: AWS::DynamoDB::Table
           Properties:
-            TableName: poc2_customer_table_${sls:stage}
+            TableName: poc2_customer_table_${self:custom.myStage}
             AttributeDefinitions:
               - AttributeName: Customer_id
                 AttributeType: S
@@ -43,7 +52,7 @@ resources: # CloudFormation template syntax from here on.
 functions:
   crudDynamoDB:
     handler: poc2_serverless.crud_operations
-    name: ${sls:stage}-pipeline-function
+    name: pipeline-function-${self:custom.myStage}
     events:
       - http:
           path: /
