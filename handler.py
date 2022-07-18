@@ -11,7 +11,7 @@ def crud_operations(event, context):
         input_data = event['body']
         final_data = json.loads(input_data)
         table.put_item(Item=final_data)
-        return {'statusCode': 200,'body': 'Items successfully stored in the dev table'}
+        return {'statusCode': 200,'body': 'Items successfully stored in the new table'}
 
     elif event['httpMethod'] == "DELETE":
         input_data = event['body']
