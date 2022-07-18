@@ -14,6 +14,7 @@ provider:
 custom:
   myStage: ${opt:stage, self:provider.stage}
   myRegion: ${opt:region, self:provider.region}
+  myAccountId: ${AWS::AccountId}
 
 
 
@@ -28,7 +29,7 @@ custom:
        - dynamodb:PutItem
        - dynamodb:UpdateItem
        - dynamodb:DeleteItem
-      Resource: "arn:aws:dynamodb:${self:custom.myStage}:016250140917:table/poc2_customer_table-${self:custom.myStage}"
+      Resource: "arn:aws:dynamodb:${self:custom.myStage}:${self:custom.myAccountId}:table/poc2_customer_table-${self:custom.myStage}"
 
 
 resources: # CloudFormation template syntax from here on.
